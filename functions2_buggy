@@ -1,0 +1,79 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+import time
+import json
+
+
+options = Options()
+options.add_experimental_option("detach", True)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+'''
+def get_reviews(num_reviews):
+        review_count = 0
+        while review_count<num_reviews:
+            try:
+                reviews = driver.find_elements(By.CSS_SELECTOR, '.review-text-content')
+                for review_num, review in enumerate(reviews, start=1):
+                    json.dump({'review_text' + str(review_count+review_num): review.text}, reviews_file, indent=6)
+                    reviews_file.write('\n')
+                    review_count += 1
+                    if review_count >= num_reviews:
+                        break
+                time.sleep(2)
+                next_page = driver.find_element(By.CSS_SELECTOR, '.a-last')
+                next_page.click()
+            except:
+                break
+            review_count += 1
+'''
+
+
+def main(search_query, file_name, num_products, num_reviews):
+    #review_count = 0
+    url = 'https://www.amazon.com/s?k=' + str(search_query)
+    driver.get(url)
+    search_results = driver.find_elements(By.CSS_SELECTOR, ".s-result-item")
+    product_links = driver.find_elements(By.CSS_SELECTOR, ".a-link-normal.a-text-normal")
+    reviews_file = open(str(file_name) + '.json', 'w') # JSON file
+
+    for i in range (1,num_products + 1):
+        product_link = product_links[i]
+        product_link.click()
+        reviews_link = driver.find_element(By.ID,'acrCustomerReviewText')
+        reviews_link.click()  # open the reviews for this product
+        time.sleep(1)
+        all_reviews = driver.find_element(By.CSS_SELECTOR,'.a-link-emphasis.a-text-bold')
+        all_reviews.click() # load all of the reviews
+
+        review_count = 0
+
+        while review_count<num_reviews:
+            try:
+                reviews = driver.find_elements(By.CSS_SELECTOR, '.review-text-content')
+                for review in reviews:
+                    review_count += 1
+                    json.dump({'review_text' + str(review_count): review.text}, reviews_file, indent=6)
+                    reviews_file.write('\n')
+                    print(review_count)
+                    if review_count >= num_reviews: # wiem ze nie jest potrzebne ale bez tego nie dziala
+                        break
+                time.sleep(2)
+                next_page = driver.find_element(By.CSS_SELECTOR, '.a-last')
+                next_page.click()
+            except:
+                break
+            
+        driver.get(url)
+        search_results = driver.find_elements(By.CSS_SELECTOR, ".s-result-item")
+        product_links = driver.find_elements(By.CSS_SELECTOR, ".a-link-normal.a-text-normal")
+    driver.quit()
+
+main('candle', 'test24', 5, 10)
+
+'''
+Scrapuje odpowiednia ilosc reviewsow ale zle je numeruje.
+'''
